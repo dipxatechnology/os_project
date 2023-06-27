@@ -1,0 +1,26 @@
+# Ignore Node.js generated files
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignore log files
+*.log
+
+# Ignore built output
+dist/
+build/
+out/
+
+# Ignore environment-specific settings
+.env
+.env.*
+.env.local
+
+# Ignore package lock files
+package-lock.json
+yarn.lock
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+*.swp
