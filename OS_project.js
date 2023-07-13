@@ -101,7 +101,7 @@ function main() {
   // Display waiting time for each process
   console.log("Waiting Time for each process:");
   for (let i = 0; i < processes.length; i++) {
-    console.log(`P${i}: ${schedulingResult.waitingTime[i]}`);
+    console.log(`P${i+1}: ${schedulingResult.waitingTime[i]}`);
   }
 }
 
