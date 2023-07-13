@@ -46,7 +46,7 @@ function main() {
 
   const processes = [];
   console.log("Enter the details for each process:");
-  for (let i = 1; i < numProcesses; i++) {
+  for (let i = 1; i <= numProcesses; i++) {
     console.log("Process " + i + ":");
     const burstTime = parseInt(readlineSync.question("Burst Time: "));
     const arrivalTime = parseInt(readlineSync.question("Arrival Time: "));
