@@ -1,5 +1,4 @@
 import calculateWaitingTime from "./calculateWaitingTime.js";
-import displayGanttChart from "./displayGanttChart.js";
 
 export default function simulateSJF(processes, preemptive) {
   const ganttChart = [];
@@ -51,11 +50,10 @@ export default function simulateSJF(processes, preemptive) {
     remainingProcesses--;
   }
 
-  displayGanttChart(ganttChart);
   const waitingTime = calculateWaitingTime(processes, completionTime);
 
-  console.log("Waiting Time for each process:");
-  for (let i = 0; i < processes.length; i++) {
-    console.log("P" + i + ": " + waitingTime[i]);
-  }
+  return {
+    ganttChart,
+    waitingTime,
+  };
 }
