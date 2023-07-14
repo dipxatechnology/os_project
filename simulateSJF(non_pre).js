@@ -1,3 +1,5 @@
+import { BRIGHT_BLUE, GREEN, pColor } from "./ConsoleUtils.js";
+
 export class Process_non_pre {
   constructor(pid, bt, art) {
     this.pid = pid; // Process ID
@@ -87,7 +89,7 @@ export function findavgTime(proc, n) {
   findTurnAroundTime(proc, n, wt, tat);
 
   // Display processes along with all details
-  console.log("Processes\tBurst time\tWaiting time\tTurnaround time");
+  pColor("Processes\tBurst time\tWaiting time\tTurnaround time", GREEN);
   for (let i = 0; i < n; i++) {
     console.log(`${proc[i].pid}\t\t${proc[i].bt}\t\t${wt[i]}\t\t${tat[i]}`);
     total_wt += wt[i];
@@ -101,7 +103,7 @@ export function findavgTime(proc, n) {
   console.log(`Average waiting time = ${avg_wt}`);
   console.log(`Average turnaround time = ${avg_tat}`);
   // Display Gantt Chart
-  console.log("\nGantt Chart:");
+  pColor("\nGantt Chart:", BRIGHT_BLUE);
   let chart = "";
   let currentTime = proc[0].art;
   for (let i = 0; i < n; i++) {

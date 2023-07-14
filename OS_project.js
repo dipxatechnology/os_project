@@ -9,24 +9,24 @@ import { BOLD, line, pColor } from "./ConsoleUtils.js";
 
 // Main program
 function main() {
-  // line();
-  // pColor("Non-preemptive Priority", BOLD);
-  // runPriority_non_pre();
+  line();
+  pColor("Non-preemptive Priority", BOLD);
+  runPriority_non_pre();
   line();
   pColor("Preemptive Priority", BOLD);
   runPreemptivePriority();
-  // line();
-  // pColor("Round Robin (Quantum = 3) Preemptive", BOLD);
-  // runRoundRobin();
-  // line();
-  // pColor("First-Come, First-Served (FCFS)", BOLD);
-  // runFCFS();
-  // line();
+  line();
+  pColor("Round Robin (Quantum = 3) Preemptive", BOLD);
+  runRoundRobin();
+  line();
+  pColor("First-Come, First-Served (FCFS)", BOLD);
+  runFCFS();
+  line();
   pColor("Shortest Job First (SJF)", BOLD);
   runSJF();
-  // line();
-  // pColor("Non-preemptive Shortest Job First (SJF)", BOLD);
-  // runSFJ_non_pre();
+  line();
+  pColor("Non-preemptive Shortest Job First (SJF)", BOLD);
+  runSFJ_non_pre();
 }
 
 main();
