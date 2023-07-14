@@ -67,10 +67,6 @@ function FCFS() {
 
   function firstComeFirstServeScheduling() {
     const processes = [];
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
 
     rl.question("Enter the number of processes: ", (numProcesses) => {
       numProcesses = parseInt(numProcesses);
@@ -239,38 +235,34 @@ function Priority_non_prem() {
   
   function nonPreemptivePriorityScheduling() {
     const processes = [];
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-  
-    rl.question('Enter the number of processes: ', (numProcesses) => {
+
+    rl.question("Enter the number of processes: ", (numProcesses) => {
       numProcesses = parseInt(numProcesses);
-  
+
       const getProcessDetails = (i) => {
         if (i === numProcesses) {
           rl.close();
           executeScheduling(processes);
         } else {
           const id = i + 1;
-  
+
           rl.question(`\nEnter burst time for process ${id}: `, (burstTime) => {
             burstTime = parseInt(burstTime);
-  
+
             rl.question(`Enter priority for process ${id}: `, (priority) => {
               priority = parseInt(priority);
-  
+
               rl.question(`Enter arrival time for process ${id}: `, (arrivalTime) => {
                 arrivalTime = parseInt(arrivalTime);
                 processes.push(new Process(id, burstTime, priority, arrivalTime));
-  
+
                 getProcessDetails(i + 1);
               });
             });
           });
         }
       };
-  
+
       getProcessDetails(0);
     });
   }
