@@ -72,5 +72,3 @@ export class SJFScheduler {
     };
   }
 }
-
-// Example usage

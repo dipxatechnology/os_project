@@ -48,6 +48,7 @@ function createTableRR(data) {
   return table.toString();
 }
 function FCFS() {
+  console.log("FCFS");
   const processes = [1, 2, 3];
   const arrivalTimes = [0, 1, 2];
   const burstTimes = [1, 2, 3];
@@ -59,6 +60,7 @@ function FCFS() {
 }
 FCFS();
 function Priority() {
+  console.log("Priority");
   const processes = [
     { at: 1, bt: 3, pr: 3, pno: 1 },
     { at: 2, bt: 5, pr: 4, pno: 2 },
@@ -75,6 +77,7 @@ function Priority() {
 }
 Priority();
 function Priority_non_prem() {
+  console.log("Priority Non primitive");
   const arrivalTime = [1, 2, 3, 4, 5];
   const burstTime = [6, 7, 8, 9, 10];
   const priority = [1, 2, 3, 4, 5];
@@ -92,6 +95,7 @@ function Priority_non_prem() {
 Priority_non_prem();
 
 function RR() {
+  console.log("ROUND ROBIN");
   const processes = [
     { pos: 1, AT: 0, BT: 4 },
     { pos: 2, AT: 1, BT: 5 },
@@ -109,6 +113,7 @@ function RR() {
 RR();
 
 function SJFS(params) {
+  console.log("SJFS ");
   const arrivalTimes = [1, 2, 3, 4, 5];
   const burstTimes = [6, 7, 8, 9, 10];
 
@@ -119,6 +124,7 @@ function SJFS(params) {
 }
 SJFS();
 function SJFS_non_pram() {
+  console.log("SJFS Non primitive");
   const processes = [
     { id: 1, at: 1, bt: 7 },
     { id: 2, at: 2, bt: 5 },
