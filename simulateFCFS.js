@@ -10,11 +10,9 @@ export class FCFScheduler {
     const wt = [0];
 
     for (let i = 1; i < n; i++) {
-      const waitTime = Math.max(
-        0,
-        wt[i - 1] + this.burstTimes[i - 1] - this.arrivalTimes[i]
-      );
-      wt[i] = waitTime + this.arrivalTimes[i];
+      const waitTime =
+        this.burstTimes[i - 1] + wt[i - 1] - this.arrivalTimes[i];
+      wt[i] = waitTime >= 0 ? waitTime : 0;
     }
 
     return wt;
@@ -49,3 +47,12 @@ export class FCFScheduler {
     return output;
   }
 }
+
+const processes = ["P1", "P2", "P3", "P4", "P5"];
+const arrivalTimes = [0, 2, 2, 5, 6];
+const burstTimes = [7, 6, 9, 3, 4];
+
+const scheduler = new FCFScheduler(processes, arrivalTimes, burstTimes);
+const result = scheduler.findAverageTime();
+
+console.log(result);

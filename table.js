@@ -1,10 +1,16 @@
 import Table from "cli-table3";
+import readline from "readline";
 import { FCFScheduler } from "./simulateFCFS.js";
 import { PriorityScheduler } from "./simulatePriority.js";
 import { PriorityScheduler_nonpram } from "./simulatePriority(non-pre).js";
 import { RoundRobinScheduler } from "./simulateRoundRobin.js";
 import { SJFScheduler_non_pre } from "./simulateSJF(non_pre).js";
 import { SJFScheduler } from "./simulateSJF.js";
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
 function createTable(data) {
   const table = new Table({
@@ -25,6 +31,7 @@ function createTable(data) {
   table.push(["Average", data.avgWt, data.avgTat, "", ""]);
   return table.toString();
 }
+
 function createTableRR(data) {
   const table = new Table({
     head: ["Process", "AT", "BT", "ST", "FT", "WT", "TAT"],
@@ -47,95 +54,378 @@ function createTableRR(data) {
 
   return table.toString();
 }
+
 function FCFS() {
-  console.log("FCFS");
-  const processes = [1, 2, 3];
-  const arrivalTimes = [0, 1, 2];
-  const burstTimes = [1, 2, 3];
-  const scheduler = new FCFScheduler(processes, arrivalTimes, burstTimes);
-  const output = scheduler.findAverageTime();
+  class Process {
+    constructor(id, arrivalTime, burstTime, priority) {
+      this.id = id;
+      this.arrivalTime = arrivalTime;
+      this.burstTime = burstTime;
+      this.priority = priority;
+    }
+  }
 
-  const tableString = createTable(output);
-  console.log(tableString);
+  function firstComeFirstServeScheduling() {
+    const processes = [];
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question("Enter the number of processes: ", (numProcesses) => {
+      numProcesses = parseInt(numProcesses);
+
+      const getProcessDetails = (i) => {
+        if (i === numProcesses) {
+          rl.close();
+          executeScheduling(processes);
+        } else {
+          const id = i + 1;
+
+          rl.question(
+            `\nEnter arrival time for process ${id}: `,
+            (arrivalTime) => {
+              arrivalTime = parseInt(arrivalTime);
+
+              rl.question(
+                `Enter burst time for process ${id}: `,
+                (burstTime) => {
+                  burstTime = parseInt(burstTime);
+
+                  rl.question(
+                    `Enter priority for process ${id}: `,
+                    (priority) => {
+                      priority = parseInt(priority);
+
+                      processes.push(
+                        new Process(id, arrivalTime, burstTime, priority)
+                      );
+
+                      getProcessDetails(i + 1);
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      };
+
+      getProcessDetails(0);
+    });
+  }
+
+  function executeScheduling(processes) {
+    processes.sort((a, b) => {
+      if (a.arrivalTime === b.arrivalTime) {
+        return a.burstTime - b.burstTime;
+      } else {
+        return a.arrivalTime - b.arrivalTime;
+      }
+    });
+
+    let currentTime = 0;
+    let waitingTime = 0;
+
+    let ganttChart = [];
+    let tableData = [];
+
+    processes.forEach((process) => {
+      if (process.arrivalTime > currentTime) {
+        currentTime = process.arrivalTime;
+      }
+
+      const startExecutionTime = currentTime;
+      const endExecutionTime = currentTime + process.burstTime;
+      const processWaitingTime = startExecutionTime - process.arrivalTime;
+
+      ganttChart.push(`P${process.id}`);
+      tableData.push({
+        process: process.id,
+        startTime: startExecutionTime,
+        arrivalTime: process.arrivalTime,
+        waitingTime: processWaitingTime,
+      });
+
+      currentTime = endExecutionTime;
+      waitingTime += processWaitingTime;
+    });
+
+    const averageWaitingTime = waitingTime / processes.length;
+
+    console.log("\nGantt Chart:");
+    console.log("┌" + "─────┬".repeat(ganttChart.length - 1) + "─────┐");
+    console.log("| " + ganttChart.join("  | ") + "  |");
+    console.log("└" + "─────┴".repeat(ganttChart.length - 1) + "─────┘");
+    console.log();
+
+    console.log("\nWaiting Time Table:");
+    console.log("| Process  | Start Time | Arrival Time | Waiting Time |");
+    console.log("|----------|------------|--------------|--------------|");
+    tableData.forEach((data) => {
+      console.log(
+        `| P${String(data.process).padEnd(7)} | ${String(data.startTime).padEnd(
+          10
+        )} | ${String(data.arrivalTime).padEnd(12)} | ${String(
+          data.waitingTime
+        ).padEnd(12)} |`
+      );
+    });
+    console.log();
+
+    console.log(`\n Average Waiting Time: ${averageWaitingTime} ms`);
+  }
+
+  firstComeFirstServeScheduling();
 }
-FCFS();
+
+function createGanttChart(output) {
+  const { wt, tat, stime, ctime } = output;
+  let chart = "Gantt Chart:\n";
+  chart += "--------------\n";
+  chart += "| Process | Start | Finish |\n";
+  chart += "--------------\n";
+
+  for (let i = 0; i < wt.length; i++) {
+    chart += `|    ${output.processes[i]}   |   ${stime[i]}   |   ${ctime[i]}   |\n`;
+  }
+
+  chart += "--------------\n";
+
+  return chart;
+}
+
 function Priority() {
-  console.log("Priority");
-  const processes = [
-    { at: 1, bt: 3, pr: 3, pno: 1 },
-    { at: 2, bt: 5, pr: 4, pno: 2 },
-    { at: 3, bt: 1, pr: 1, pno: 3 },
-    { at: 4, bt: 7, pr: 7, pno: 4 },
-    { at: 5, bt: 4, pr: 8, pno: 5 },
-  ];
+  rl.question("Enter the number of processes: ", (numProcesses) => {
+    const processes = [];
 
-  const scheduler = new PriorityScheduler(processes);
-  const result = scheduler.calculateAverageTime();
-  console.log(result);
-  const tableString = createTable(result);
-  console.log(tableString);
+    const processDetailsPrompt = (index) => {
+      if (index < numProcesses) {
+        rl.question(`Enter Arrival Time for P${index + 1}: `, (at) => {
+          rl.question(`Enter Burst Time for P${index + 1}: `, (bt) => {
+            rl.question(`Enter Priority for P${index + 1}: `, (pr) => {
+              processes.push({
+                at: Number(at),
+                bt: Number(bt),
+                pr: Number(pr),
+                pno: index + 1,
+              });
+              processDetailsPrompt(index + 1);
+            });
+          });
+        });
+      } else {
+        const scheduler = new PriorityScheduler(processes);
+        const result = scheduler.calculateAverageTime();
+        const tableString = createTable(result);
+        console.log(tableString);
+        rl.close();
+      }
+    };
+
+    processDetailsPrompt(0);
+  });
 }
-Priority();
+
 function Priority_non_prem() {
-  console.log("Priority Non primitive");
-  const arrivalTime = [1, 2, 3, 4, 5];
-  const burstTime = [6, 7, 8, 9, 10];
-  const priority = [1, 2, 3, 4, 5];
+  const readline = require("readline");
 
-  const scheduler = new PriorityScheduler_nonpram(
-    arrivalTime,
-    burstTime,
-    priority
-  );
-  const output = scheduler.findGanttChart();
+  class Process {
+    constructor(id, burstTime, priority, arrivalTime) {
+      this.id = id;
+      this.burstTime = burstTime;
+      this.priority = priority;
+      this.arrivalTime = arrivalTime;
+    }
+  }
 
-  const tableString = createTable(output);
-  console.log(tableString);
+  function nonPreemptivePriorityScheduling() {
+    const processes = [];
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question("Enter the number of processes: ", (numProcesses) => {
+      numProcesses = parseInt(numProcesses);
+
+      const getProcessDetails = (i) => {
+        if (i === numProcesses) {
+          rl.close();
+          executeScheduling(processes);
+        } else {
+          const id = i + 1;
+
+          rl.question(`\nEnter burst time for process ${id}: `, (burstTime) => {
+            burstTime = parseInt(burstTime);
+
+            rl.question(`Enter priority for process ${id}: `, (priority) => {
+              priority = parseInt(priority);
+
+              rl.question(
+                `Enter arrival time for process ${id}: `,
+                (arrivalTime) => {
+                  arrivalTime = parseInt(arrivalTime);
+                  processes.push(
+                    new Process(id, burstTime, priority, arrivalTime)
+                  );
+
+                  getProcessDetails(i + 1);
+                }
+              );
+            });
+          });
+        }
+      };
+
+      getProcessDetails(0);
+    });
+  }
+
+  function executeScheduling(processes) {
+    const originalProcesses = [...processes]; // Make a copy of the original processes array
+
+    processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+    let currentTime = 0;
+    let waitingTime = 0;
+
+    while (processes.length > 0) {
+      let eligibleProcesses = processes.filter(
+        (process) => process.arrivalTime <= currentTime
+      );
+      eligibleProcesses.sort((a, b) => a.priority - b.priority);
+
+      if (eligibleProcesses.length === 0) {
+        currentTime++;
+        continue;
+      }
+
+      const process = eligibleProcesses[0];
+
+      waitingTime += currentTime - process.arrivalTime;
+      currentTime += process.burstTime;
+
+      console.log(
+        `\nProcess ${process.id}: executed from ${
+          currentTime - process.burstTime
+        } to ${currentTime}`
+      );
+      console.log(
+        `\tWaiting time: ${
+          currentTime - process.burstTime - process.arrivalTime
+        }`
+      );
+
+      processes.splice(processes.indexOf(process), 1);
+    }
+
+    const averageWaitingTime = waitingTime / originalProcesses.length; // Calculate average based on the original number of processes
+    console.log(`\nAverage waiting time: ${averageWaitingTime}`);
+  }
+
+  nonPreemptivePriorityScheduling();
 }
-Priority_non_prem();
 
 function RR() {
-  console.log("ROUND ROBIN");
-  const processes = [
-    { pos: 1, AT: 0, BT: 4 },
-    { pos: 2, AT: 1, BT: 5 },
-    { pos: 3, AT: 2, BT: 6 },
-    { pos: 4, AT: 3, BT: 7 },
-    { pos: 5, AT: 4, BT: 8 },
-  ];
-  const quantum = 2;
+  rl.question("Enter the number of processes: ", (numProcesses) => {
+    const processes = [];
+    const quantum = 0;
 
-  const scheduler = new RoundRobinScheduler(quantum);
-  const result = scheduler.schedule(processes);
-  const tableString = createTableRR(result);
-  console.log(tableString);
+    const processDetailsPrompt = (index) => {
+      if (index < numProcesses) {
+        rl.question(`Enter Arrival Time for P${index + 1}: `, (at) => {
+          rl.question(`Enter Burst Time for P${index + 1}: `, (bt) => {
+            processes.push({ pos: index + 1, AT: Number(at), BT: Number(bt) });
+            processDetailsPrompt(index + 1);
+          });
+        });
+      } else {
+        rl.question("Enter the time quantum: ", (q) => {
+          const scheduler = new RoundRobinScheduler(Number(q));
+          const result = scheduler.schedule(processes);
+          const tableString = createTableRR(result);
+          console.log(tableString);
+          rl.close();
+        });
+      }
+    };
+
+    processDetailsPrompt(0);
+  });
 }
-RR();
 
-function SJFS(params) {
-  console.log("SJFS ");
-  const arrivalTimes = [1, 2, 3, 4, 5];
-  const burstTimes = [6, 7, 8, 9, 10];
+function SJFS() {
+  rl.question("Enter the number of processes: ", (numProcesses) => {
+    const arrivalTimes = [];
+    const burstTimes = [];
 
-  const scheduler = new SJFScheduler(arrivalTimes, burstTimes);
-  const output = scheduler.schedule();
-  const tableString = createTable(output);
-  console.log(tableString);
+    const processDetailsPrompt = (index) => {
+      if (index < numProcesses) {
+        rl.question(`Enter Arrival Time for P${index + 1}: `, (at) => {
+          rl.question(`Enter Burst Time for P${index + 1}: `, (bt) => {
+            arrivalTimes.push(Number(at));
+            burstTimes.push(Number(bt));
+            processDetailsPrompt(index + 1);
+          });
+        });
+      } else {
+        const scheduler = new SJFScheduler(arrivalTimes, burstTimes);
+        const output = scheduler.schedule();
+        const tableString = createTable(output);
+        console.log(tableString);
+        rl.close();
+      }
+    };
+
+    processDetailsPrompt(0);
+  });
 }
-SJFS();
+
 function SJFS_non_pram() {
-  console.log("SJFS Non primitive");
-  const processes = [
-    { id: 1, at: 1, bt: 7 },
-    { id: 2, at: 2, bt: 5 },
-    { id: 3, at: 3, bt: 1 },
-    { id: 4, at: 4, bt: 2 },
-    { id: 5, at: 5, bt: 8 },
-  ];
+  rl.question("Enter the number of processes: ", (numProcesses) => {
+    const processes = [];
 
-  const scheduler = new SJFScheduler_non_pre(processes);
-  const output = scheduler.schedule();
-  const tableString = createTable(output);
-  console.log(tableString);
+    const processDetailsPrompt = (index) => {
+      if (index < numProcesses) {
+        rl.question(`Enter Arrival Time for P${index + 1}: `, (at) => {
+          rl.question(`Enter Burst Time for P${index + 1}: `, (bt) => {
+            processes.push({ id: index + 1, at: Number(at), bt: Number(bt) });
+            processDetailsPrompt(index + 1);
+          });
+        });
+      } else {
+        const scheduler = new SJFScheduler_non_pre(processes);
+        const output = scheduler.schedule();
+        const tableString = createTable(output);
+        console.log(tableString);
+        rl.close();
+      }
+    };
+
+    processDetailsPrompt(0);
+  });
 }
-SJFS_non_pram();
+
+// Prompt the user for the scheduling algorithm choice
+rl.question(
+  "Enter the scheduling algorithm (FCFS, Priority, Priority_non_prem, RR, SJFS, SJFS_non_pram): ",
+  (algorithm) => {
+    if (algorithm === "FCFS") {
+      FCFS();
+    } else if (algorithm === "Priority") {
+      Priority();
+    } else if (algorithm === "Priority_non_prem") {
+      Priority_non_prem();
+    } else if (algorithm === "RR") {
+      RR();
+    } else if (algorithm === "SJFS") {
+      SJFS();
+    } else if (algorithm === "SJFS_non_pram") {
+      SJFS_non_pram();
+    } else {
+      console.log("Invalid scheduling algorithm choice.");
+      rl.close();
+    }
+  }
+);
