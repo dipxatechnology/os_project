@@ -1,71 +1,51 @@
-import { BRIGHT_BLUE, GREEN, pColor } from "./ConsoleUtils.js";
-
-function findWaitingTime(processes, n, bt, wt) {
-  wt[0] = 0;
-
-  for (let i = 1; i < n; i++) {
-    wt[i] = bt[i - 1] + wt[i - 1];
-  }
-}
-
-function findTurnAroundTime(processes, n, bt, wt, tat) {
-  for (let i = 0; i < n; i++) {
-    tat[i] = bt[i] + wt[i];
-  }
-}
-
-export default function simulateFCFS(processes, n, bt) {
-  let wt = new Array(n);
-  let tat = new Array(n);
-
-  for (let i = 0; i < n; i++) {
-    wt[i] = 0;
-    tat[i] = 0;
+export class FCFScheduler {
+  constructor(processes, arrivalTimes, burstTimes) {
+    this.processes = processes;
+    this.arrivalTimes = arrivalTimes;
+    this.burstTimes = burstTimes;
   }
 
-  let total_wt = 0;
-  let total_tat = 0;
+  findWaitingTime() {
+    const n = this.processes.length;
+    const wt = [0];
 
-  findWaitingTime(processes, n, bt, wt);
-  findTurnAroundTime(processes, n, bt, wt, tat);
+    for (let i = 1; i < n; i++) {
+      const waitTime = Math.max(
+        0,
+        wt[i - 1] + this.burstTimes[i - 1] - this.arrivalTimes[i]
+      );
+      wt[i] = waitTime + this.arrivalTimes[i];
+    }
 
-  pColor("Processes\tBurst time\tWaiting time\tTurnaround time", GREEN);
-
-  for (let i = 0; i < n; i++) {
-    total_wt += wt[i];
-    total_tat += tat[i];
-    console.log(
-      "P" + processes[i] + "\t\t" + bt[i] + "\t\t" + wt[i] + "\t\t" + tat[i]
-    );
+    return wt;
   }
 
-  let avg_wt = total_wt / n;
-  let avg_tat = total_tat / n;
-
-  console.log("\nAverage waiting time = " + avg_wt);
-
-  console.log("Average turnaround time = " + avg_tat);
-
-  let ganttChart = generateGanttChart(processes, bt);
-  pColor("\nGantt Chart:", BRIGHT_BLUE);
-  console.log(ganttChart);
-}
-
-function generateGanttChart(processes, bt) {
-  let ganttChart = "";
-
-  for (let i = 0; i < processes.length; i++) {
-    ganttChart += "P" + processes[i] + " | ";
+  findTurnaroundTime(waitingTimes) {
+    const tat = [];
+    for (let i = 0; i < this.processes.length; i++) {
+      tat[i] = this.burstTimes[i] + waitingTimes[i];
+    }
+    return tat;
   }
 
-  ganttChart += "\n";
+  findAverageTime() {
+    const n = this.processes.length;
+    const waitingTimes = this.findWaitingTime();
+    const turnaroundTimes = this.findTurnaroundTime(waitingTimes);
+    const totalWt = waitingTimes.reduce((acc, wt) => acc + wt, 0);
+    const totalTat = turnaroundTimes.reduce((acc, tat) => acc + tat, 0);
+    const avgWt = totalWt / n;
+    const avgTat = totalTat / n;
 
-  let currentTime = 0;
+    const output = {
+      wt: waitingTimes,
+      tat: turnaroundTimes,
+      stime: waitingTimes.map((wt, i) => wt + 1),
+      ctime: turnaroundTimes.map((tat, i) => tat + 1),
+      avgWt,
+      avgTat,
+    };
 
-  for (let i = 0; i < processes.length; i++) {
-    currentTime += bt[i];
-    ganttChart += currentTime + " ";
+    return output;
   }
-
-  return ganttChart;
 }

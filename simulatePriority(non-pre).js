@@ -1,4 +1,4 @@
-class PriorityScheduler_nonpram {
+export class PriorityScheduler_nonpram {
   constructor(arrivalTime, burstTime, priority) {
     this.processes = [];
     for (let i = 0; i < arrivalTime.length; i++) {
@@ -79,14 +79,3 @@ class PriorityScheduler_nonpram {
 }
 
 // Example usage
-const arrivalTime = [1, 2, 3, 4, 5];
-const burstTime = [3, 5, 1, 7, 4];
-const priority = [3, 4, 1, 7, 8];
-
-const scheduler = new PriorityScheduler_nonpram(
-  arrivalTime,
-  burstTime,
-  priority
-);
-const output = scheduler.findGanttChart();
-console.log(output);

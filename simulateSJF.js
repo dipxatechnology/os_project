@@ -74,8 +74,8 @@ class SJFScheduler {
 }
 
 // Example usage
-const arrivalTimes = [0, 2, 4, 6, 8];
-const burstTimes = [3, 5, 1, 7, 4];
+const arrivalTimes = [1, 2, 3, 4, 5];
+const burstTimes = [6, 7, 8, 9, 10];
 
 const scheduler = new SJFScheduler(arrivalTimes, burstTimes);
 const output = scheduler.schedule();

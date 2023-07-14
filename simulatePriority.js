@@ -1,4 +1,4 @@
-class PriorityScheduler {
+export class PriorityScheduler {
   constructor(processes) {
     this.processes = processes;
   }
@@ -68,17 +68,3 @@ class PriorityScheduler {
     };
   }
 }
-
-// Example usage
-const processes = [
-  { at: 1, bt: 3, pr: 3, pno: 1 },
-  { at: 2, bt: 5, pr: 4, pno: 2 },
-  { at: 3, bt: 1, pr: 1, pno: 3 },
-  { at: 4, bt: 7, pr: 7, pno: 4 },
-  { at: 5, bt: 4, pr: 8, pno: 5 },
-];
-
-const scheduler = new PriorityScheduler(processes);
-const result = scheduler.calculateAverageTime();
-
-console.log(result);

@@ -1,4 +1,4 @@
-class RoundRobinScheduler {
+export class RoundRobinScheduler {
   constructor(quantum) {
     this.quantum = quantum;
   }
@@ -110,15 +110,3 @@ class RoundRobinScheduler {
 }
 
 // Example usage
-const processes = [
-  { pos: 1, AT: 0, BT: 4 },
-  { pos: 2, AT: 1, BT: 5 },
-  { pos: 3, AT: 2, BT: 6 },
-  { pos: 4, AT: 3, BT: 7 },
-  { pos: 5, AT: 4, BT: 8 },
-];
-const quantum = 2;
-
-const scheduler = new RoundRobinScheduler(quantum);
-const result = scheduler.schedule(processes);
-console.log(result);
