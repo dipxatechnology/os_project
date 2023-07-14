@@ -36,7 +36,8 @@ function findTurnaroundTime(
     turnaroundTime[i] = burstTime[i] + waitingTime[i];
   }
 }
-export default function simulateRoundRobin(processes, n, burstTime, quantum) {
+
+export function simulateRoundRobin(processes, n, burstTime, quantum) {
   let waitingTime = new Array(n).fill(0);
   let turnaroundTime = new Array(n).fill(0);
   let totalWaitingTime = 0;
@@ -45,12 +46,12 @@ export default function simulateRoundRobin(processes, n, burstTime, quantum) {
   findWaitingTime(processes, n, burstTime, waitingTime, quantum);
   findTurnaroundTime(processes, n, burstTime, waitingTime, turnaroundTime);
 
-  pColor("Processes\tBurst Time\tWaiting Time\tTurnaround\tTime", GREEN);
+  pColor("Processes  Burst Time  Waiting Time  Turnaround Time", GREEN);
   for (let i = 0; i < n; i++) {
     totalWaitingTime += waitingTime[i];
     totalTurnaroundTime += turnaroundTime[i];
     console.log(
-      `${processes[i]}\t${burstTime[i]}\t${waitingTime[i]}\t${turnaroundTime[i]}`
+      `${processes[i]}          ${burstTime[i]}             ${waitingTime[i]}            ${turnaroundTime[i]}`
     );
   }
 
@@ -84,6 +85,6 @@ export default function simulateRoundRobin(processes, n, burstTime, quantum) {
       }
     }
   }
-  pColor("Gantt Chart:", BRIGHT_BLUE);
-  console.log(ganttChart);
+  pColor("Gantt Chart: ", BRIGHT_BLUE);
+  console.log(`${ganttChart}`);
 }

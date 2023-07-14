@@ -1,7 +1,7 @@
 import runPreemptivePrioritySimulation from "./simulatePriority.js";
-import simulateRoundRobin from "./simulateRoundRobin.js";
+import { simulateRoundRobin } from "./simulateRoundRobin.js";
 import simulateFCFS from "./simulateFCFS.js";
-import calculateSJF from "./simulateSJF.js";
+import calculateAverageTimesSJf from "./simulateSJF.js";
 
 import { Process_non_pre, findavgTime } from "./simulateSJF(non_pre).js";
 import simulatePriority_non_pre from "./simulatePriority(non-pre).js";
@@ -9,24 +9,24 @@ import { BOLD, line, pColor } from "./ConsoleUtils.js";
 
 // Main program
 function main() {
-  line();
-  pColor("Non-preemptive Priority", BOLD);
-  runPriority_non_pre();
+  // line();
+  // pColor("Non-preemptive Priority", BOLD);
+  // runPriority_non_pre();
   line();
   pColor("Preemptive Priority", BOLD);
   runPreemptivePriority();
-  line();
-  pColor("Round Robin (Quantum = 3) Preemptive", BOLD);
-  runRoundRobin();
-  line();
-  pColor("First-Come, First-Served (FCFS)", BOLD);
-  runFCFS();
-  line();
+  // line();
+  // pColor("Round Robin (Quantum = 3) Preemptive", BOLD);
+  // runRoundRobin();
+  // line();
+  // pColor("First-Come, First-Served (FCFS)", BOLD);
+  // runFCFS();
+  // line();
   pColor("Shortest Job First (SJF)", BOLD);
-  runSFJ();
-  line();
-  pColor("Non-preemptive Shortest Job First (SJF)", BOLD);
-  runSFJ_non_pre();
+  runSJF();
+  // line();
+  // pColor("Non-preemptive Shortest Job First (SJF)", BOLD);
+  // runSFJ_non_pre();
 }
 
 main();
@@ -71,13 +71,18 @@ function runFCFS() {
   simulateFCFS(processes, n, burst_time);
 }
 
-function runSFJ() {
-  let n = 5;
-  let A = [];
-  let total = 0;
-  const burstTimes = [3, 5, 1, 7, 4];
-  calculateSJF(n, A, total, burstTimes);
+function runSJF() {
+  let n = 4;
+  let burstTimes = [10, 6, 8, 3];
+  let result = calculateAverageTimesSJf(n, burstTimes);
+
+  // Access the results
+  for (let i = 0; i < result.length; i++) {
+    let row = result[i].map((item) => item.toString().padEnd(20, " "));
+    console.log(row.join(""));
+  }
 }
+
 function runPreemptivePriority() {
   const processes = [
     { pid: 1, bt: 5, priority: 2 },
