@@ -227,105 +227,102 @@ function Priority() {
   });
 }
 
-function Priority_non_prem() {
-  const readline = require("readline");
-
-  class Process {
-    constructor(id, burstTime, priority, arrivalTime) {
-      this.id = id;
-      this.burstTime = burstTime;
-      this.priority = priority;
-      this.arrivalTime = arrivalTime;
-    }
+class Process {
+  constructor(id, burstTime, priority, arrivalTime) {
+    this.id = id;
+    this.burstTime = burstTime;
+    this.priority = priority;
+    this.arrivalTime = arrivalTime;
   }
+}
 
-  function nonPreemptivePriorityScheduling() {
-    const processes = [];
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
+function nonPreemptivePriorityScheduling() {
+  const processes = [];
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 
-    rl.question("Enter the number of processes: ", (numProcesses) => {
-      numProcesses = parseInt(numProcesses);
+  rl.question('Enter the number of processes: ', (numProcesses) => {
+    numProcesses = parseInt(numProcesses);
 
-      const getProcessDetails = (i) => {
-        if (i === numProcesses) {
-          rl.close();
-          executeScheduling(processes);
-        } else {
-          const id = i + 1;
+    const getProcessDetails = (i) => {
+      if (i === numProcesses) {
+        rl.close();
+        executeScheduling(processes);
+      } else {
+        const id = i + 1;
 
-          rl.question(`\nEnter burst time for process ${id}: `, (burstTime) => {
-            burstTime = parseInt(burstTime);
+        rl.question(`\nEnter burst time for process ${id}: `, (burstTime) => {
+          burstTime = parseInt(burstTime);
 
-            rl.question(`Enter priority for process ${id}: `, (priority) => {
-              priority = parseInt(priority);
+          rl.question(`Enter priority for process ${id}: `, (priority) => {
+            priority = parseInt(priority);
 
-              rl.question(
-                `Enter arrival time for process ${id}: `,
-                (arrivalTime) => {
-                  arrivalTime = parseInt(arrivalTime);
-                  processes.push(
-                    new Process(id, burstTime, priority, arrivalTime)
-                  );
+            rl.question(`Enter arrival time for process ${id}: `, (arrivalTime) => {
+              arrivalTime = parseInt(arrivalTime);
+              processes.push(new Process(id, burstTime, priority, arrivalTime));
 
-                  getProcessDetails(i + 1);
-                }
-              );
+              getProcessDetails(i + 1);
             });
           });
-        }
-      };
-
-      getProcessDetails(0);
-    });
-  }
-
-  function executeScheduling(processes) {
-    const originalProcesses = [...processes]; // Make a copy of the original processes array
-
-    processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
-
-    let currentTime = 0;
-    let waitingTime = 0;
-
-    while (processes.length > 0) {
-      let eligibleProcesses = processes.filter(
-        (process) => process.arrivalTime <= currentTime
-      );
-      eligibleProcesses.sort((a, b) => a.priority - b.priority);
-
-      if (eligibleProcesses.length === 0) {
-        currentTime++;
-        continue;
+        });
       }
+    };
 
-      const process = eligibleProcesses[0];
+    getProcessDetails(0);
+  });
+}
 
-      waitingTime += currentTime - process.arrivalTime;
-      currentTime += process.burstTime;
+function executeScheduling(processes) {
+  processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
 
-      console.log(
-        `\nProcess ${process.id}: executed from ${
-          currentTime - process.burstTime
-        } to ${currentTime}`
-      );
-      console.log(
-        `\tWaiting time: ${
-          currentTime - process.burstTime - process.arrivalTime
-        }`
-      );
+  let currentTime = 0;
+  let waitingTime = 0;
 
-      processes.splice(processes.indexOf(process), 1);
+  let ganttChart = [];
+  let tableData = [];
+
+  while (processes.length > 0) {
+    let eligibleProcesses = processes.filter(process => process.arrivalTime <= currentTime);
+    eligibleProcesses.sort((a, b) => a.priority - b.priority);
+
+    if (eligibleProcesses.length === 0) {
+      currentTime++;
+      continue;
     }
 
-    const averageWaitingTime = waitingTime / originalProcesses.length; // Calculate average based on the original number of processes
-    console.log(`\nAverage waiting time: ${averageWaitingTime}`);
+    const process = eligibleProcesses[0];
+
+    waitingTime += currentTime - process.arrivalTime;
+    currentTime += process.burstTime;
+
+    ganttChart.push({ process: process.id, startTime: currentTime - process.burstTime, endTime: currentTime });
+    tableData.push({ process: process.id, startTime: currentTime - process.burstTime, arrivalTime: process.arrivalTime, waitingTime: currentTime - process.arrivalTime });
+
+    processes.splice(processes.indexOf(process), 1);
   }
 
-  nonPreemptivePriorityScheduling();
+  const averageWaitingTime = waitingTime / tableData.length;
+
+  console.log("\nGantt Chart:");
+  console.log("┌" + "─────┬".repeat(ganttChart.length - 1) + "─────┐");
+  console.log("| " + ganttChart.map(({ process }) => `P${process}`).join("  | ") + "  |");
+  console.log("└" + "─────┴".repeat(ganttChart.length - 1) + "─────┘");
+  console.log();
+
+  console.log("\nWaiting Time Table:");
+  console.log("| Process  | Start Time | Arrival Time | Waiting Time |");
+  console.log("|----------|------------|--------------|--------------|");
+  tableData.forEach(data => {
+    console.log(`| P${String(data.process).padEnd(7)} | ${String(data.startTime).padEnd(10)} | ${String(data.arrivalTime).padEnd(12)} | ${String(data.waitingTime).padEnd(12)} |`);
+  });
+  console.log();
+
+  console.log(`\nAverage Waiting Time: ${averageWaitingTime} ms`);
 }
+
+nonPreemptivePriorityScheduling();
 
 function RR() {
   rl.question("Enter the number of processes: ", (numProcesses) => {
