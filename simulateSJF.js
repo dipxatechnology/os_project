@@ -1,3 +1,5 @@
+import { BOLD, BRIGHT_BLUE, GREEN, RESET, pColor } from "./ConsoleUtils.js";
+
 export default function calculateAverageTimesSJF(n, burstTimes) {
   let A = [];
   let total = 0;
@@ -37,7 +39,12 @@ export default function calculateAverageTimesSJF(n, burstTimes) {
   total = 0;
   let output = [];
   let ganttChart = [];
-  output.push(["Processes", "Burst time", "Waiting time", "Turnaround time"]);
+  output.push([
+    ` ${GREEN}${BOLD}Processes`,
+    ` Burst time`,
+    ` Waiting time`,
+    ` Turnaround time${RESET}`,
+  ]);
 
   for (let i = 0; i < n; i++) {
     A[i][3] = A[i][1] + A[i][2];
@@ -54,7 +61,7 @@ export default function calculateAverageTimesSJF(n, burstTimes) {
   output.push(["Average Turnaround Time =", avg_tat]);
 
   // Print the Gantt Chart
-  console.log("Gantt Chart:");
+  pColor("Gantt Chart:", BRIGHT_BLUE);
   let chart = "";
   for (let i = 0; i < ganttChart.length; i++) {
     chart += "| ";
