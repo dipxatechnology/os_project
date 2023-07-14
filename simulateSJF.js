@@ -1,4 +1,4 @@
-class SJFScheduler {
+export class SJFScheduler {
   constructor(arrivalTimes, burstTimes) {
     this.processes = [];
     for (let i = 0; i < burstTimes.length; i++) {
@@ -74,9 +74,3 @@ class SJFScheduler {
 }
 
 // Example usage
-const arrivalTimes = [1, 2, 3, 4, 5];
-const burstTimes = [6, 7, 8, 9, 10];
-
-const scheduler = new SJFScheduler(arrivalTimes, burstTimes);
-const output = scheduler.schedule();
-console.log(output);

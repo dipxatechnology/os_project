@@ -1,4 +1,4 @@
-class SJFScheduler {
+export class SJFScheduler_non_pre {
   constructor(processes) {
     this.processes = processes;
   }
@@ -88,15 +88,3 @@ class SJFScheduler {
     };
   }
 }
-
-const processes = [
-  { id: 1, at: 1, bt: 7 },
-  { id: 2, at: 2, bt: 5 },
-  { id: 3, at: 3, bt: 1 },
-  { id: 4, at: 4, bt: 2 },
-  { id: 5, at: 5, bt: 8 },
-];
-
-const scheduler = new SJFScheduler(processes);
-const output = scheduler.schedule();
-console.log(output);

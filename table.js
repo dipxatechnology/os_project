@@ -3,6 +3,8 @@ import { FCFScheduler } from "./simulateFCFS.js";
 import { PriorityScheduler } from "./simulatePriority.js";
 import { PriorityScheduler_nonpram } from "./simulatePriority(non-pre).js";
 import { RoundRobinScheduler } from "./simulateRoundRobin.js";
+import { SJFScheduler_non_pre } from "./simulateSJF(non_pre).js";
+import { SJFScheduler } from "./simulateSJF.js";
 
 function createTable(data) {
   const table = new Table({
@@ -20,6 +22,7 @@ function createTable(data) {
     table.push([`P${i + 1}`, wt[i], tat[i], stime[i], ctime[i]]);
   }
 
+  table.push(["Average", data.avgWt, data.avgTat, "", ""]);
   return table.toString();
 }
 function createTableRR(data) {
@@ -40,7 +43,6 @@ function createTableRR(data) {
     ]);
   }
 
-  table.push([]);
   table.push(["Average", "", "", "", "", avg_wt, avg_tat]);
 
   return table.toString();
@@ -67,7 +69,7 @@ function Priority() {
 
   const scheduler = new PriorityScheduler(processes);
   const result = scheduler.calculateAverageTime();
-
+  console.log(result);
   const tableString = createTable(result);
   console.log(tableString);
 }
@@ -105,3 +107,29 @@ function RR() {
   console.log(tableString);
 }
 RR();
+
+function SJFS(params) {
+  const arrivalTimes = [1, 2, 3, 4, 5];
+  const burstTimes = [6, 7, 8, 9, 10];
+
+  const scheduler = new SJFScheduler(arrivalTimes, burstTimes);
+  const output = scheduler.schedule();
+  const tableString = createTable(output);
+  console.log(tableString);
+}
+SJFS();
+function SJFS_non_pram() {
+  const processes = [
+    { id: 1, at: 1, bt: 7 },
+    { id: 2, at: 2, bt: 5 },
+    { id: 3, at: 3, bt: 1 },
+    { id: 4, at: 4, bt: 2 },
+    { id: 5, at: 5, bt: 8 },
+  ];
+
+  const scheduler = new SJFScheduler_non_pre(processes);
+  const output = scheduler.schedule();
+  const tableString = createTable(output);
+  console.log(tableString);
+}
+SJFS_non_pram();
