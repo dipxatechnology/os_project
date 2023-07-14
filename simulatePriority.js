@@ -1,114 +1,84 @@
-import { BOLD, BRIGHT_BLUE, GREEN, pColor } from "./ConsoleUtils.js";
+class PriorityScheduler {
+  constructor(processes) {
+    this.processes = processes;
+  }
 
-function simulatePreemptivePriority(proc) {
-  let time = 0;
-  let complete = 0;
-  let currentProcess = null;
-  let ganttChart = [];
-
-  while (complete !== proc.length) {
-    let highestPriority = Infinity;
-    let nextProcess = null;
-
-    for (let i = 0; i < proc.length; i++) {
-      if (
-        proc[i].bt > 0 &&
-        proc[i].priority < highestPriority &&
-        proc[i].pid <= time
-      ) {
-        highestPriority = proc[i].priority;
-        nextProcess = proc[i];
-      }
-    }
-
-    if (nextProcess !== null) {
-      if (currentProcess !== null && currentProcess.pid !== nextProcess.pid) {
-        ganttChart.push({
-          processId: currentProcess.pid,
-          startTime: time,
-          endTime: time,
-        });
-      }
-
-      nextProcess.bt--;
-      time++;
-
-      if (nextProcess.bt === 0) {
-        complete++;
-        ganttChart.push({
-          processId: nextProcess.pid,
-          startTime: time - 1,
-          endTime: time,
-        });
-      }
-
-      currentProcess = nextProcess;
+  compareProcesses(a, b) {
+    if (a.at === b.at) {
+      return a.pr < b.pr;
     } else {
-      time++;
+      return a.at < b.at;
     }
   }
 
-  return ganttChart;
-}
+  calculateWaitingTime() {
+    const wt = new Array(this.processes.length).fill(0);
+    const service = [];
 
-function printGanttChart(ganttChart, processes) {
-  let chart = "";
-  let processOrder = "";
-  let processTimes = [];
-  let totalTime = 0;
+    service[0] = this.processes[0].at;
 
-  for (let i = 0; i < ganttChart.length; i++) {
-    const process = ganttChart[i];
-    processOrder += `P${process.processId} | `;
-    processTimes.push(process.endTime);
-  }
+    for (let i = 1; i < this.processes.length; i++) {
+      service[i] = this.processes[i - 1].bt + service[i - 1];
+      wt[i] = service[i] - this.processes[i].at;
 
-  // eslint-disable-next-line no-unused-vars
-  totalTime = processTimes[processTimes.length - 1];
-
-  chart += processOrder.slice(0, -3) + "\n";
-  // chart += processTimes.join("   ");
-
-  pColor("Gantt Chart:\n", BRIGHT_BLUE);
-  console.log(chart);
-
-  const waitingTimes = [];
-  const turnaroundTimes = [];
-
-  pColor("Processes\tBurst time\tWaiting time\tTurnaround time", GREEN);
-  for (let i = 0; i < processes.length; i++) {
-    const process = processes[i];
-    let waitingTime = 0;
-    let turnaroundTime = 0;
-
-    for (let j = 0; j < ganttChart.length; j++) {
-      const chartProcess = ganttChart[j];
-      if (chartProcess.processId === process.pid) {
-        waitingTime = chartProcess.startTime;
-        turnaroundTime = chartProcess.endTime;
-        break;
+      if (wt[i] < 0) {
+        wt[i] = 0;
       }
     }
 
-    waitingTimes.push(waitingTime);
-    turnaroundTimes.push(turnaroundTime);
-
-    console.log(
-      `P${process.pid}\t\t${process.bt}\t\t${waitingTime}\t\t${turnaroundTime}`
-    );
+    return wt;
   }
 
-  const averageWaitingTime =
-    waitingTimes.reduce((sum, time) => sum + time, 0) / waitingTimes.length;
-  const averageTurnaroundTime =
-    turnaroundTimes.reduce((sum, time) => sum + time, 0) /
-    turnaroundTimes.length;
+  calculateTurnaroundTime(wt) {
+    const tat = new Array(this.processes.length);
 
-  console.log("\nAverage waiting time =", averageWaitingTime);
-  console.log("Average turnaround time =", averageTurnaroundTime);
+    for (let i = 0; i < this.processes.length; i++) {
+      tat[i] = this.processes[i].bt + wt[i];
+    }
+
+    return tat;
+  }
+
+  calculateAverageTime() {
+    const wt = this.calculateWaitingTime();
+    const tat = this.calculateTurnaroundTime(wt);
+    const stime = [];
+    const ctime = [];
+
+    stime[0] = this.processes[0].at;
+    ctime[0] = stime[0] + tat[0];
+
+    for (let i = 1; i < this.processes.length; i++) {
+      stime[i] = ctime[i - 1];
+      ctime[i] = stime[i] + tat[i] - wt[i];
+    }
+
+    const avgWt =
+      wt.reduce((sum, time) => sum + time, 0) / this.processes.length;
+    const avgTat =
+      tat.reduce((sum, time) => sum + time, 0) / this.processes.length;
+
+    return {
+      wt,
+      tat,
+      stime,
+      ctime,
+      avgWt,
+      avgTat,
+    };
+  }
 }
 
-export default function runPreemptivePrioritySimulation(processes) {
-  const ganttChart = simulatePreemptivePriority(processes);
-  printGanttChart(ganttChart, processes);
-}
+// Example usage
+const processes = [
+  { at: 1, bt: 3, pr: 3, pno: 1 },
+  { at: 2, bt: 5, pr: 4, pno: 2 },
+  { at: 3, bt: 1, pr: 1, pno: 3 },
+  { at: 4, bt: 7, pr: 7, pno: 4 },
+  { at: 5, bt: 4, pr: 8, pno: 5 },
+];
+
+const scheduler = new PriorityScheduler(processes);
+const result = scheduler.calculateAverageTime();
+
+console.log(result);

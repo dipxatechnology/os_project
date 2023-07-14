@@ -1,74 +1,82 @@
-import { BOLD, BRIGHT_BLUE, GREEN, RESET, pColor } from "./ConsoleUtils.js";
-
-export default function calculateAverageTimesSJF(n, burstTimes) {
-  let A = [];
-  let total = 0;
-  let index, temp;
-  let avg_wt, avg_tat;
-
-  for (let i = 0; i < n; i++) {
-    A.push([i + 1, burstTimes[i]]);
+class SJFScheduler {
+  constructor(arrivalTimes, burstTimes) {
+    this.processes = [];
+    for (let i = 0; i < burstTimes.length; i++) {
+      this.processes.push({
+        id: i + 1,
+        arrivalTime: arrivalTimes[i],
+        burstTime: burstTimes[i],
+        waitingTime: 0,
+        turnaroundTime: 0,
+      });
+    }
   }
 
-  for (let i = 0; i < n; i++) {
-    index = i;
-    for (let j = i + 1; j < n; j++) {
-      if (A[j][1] < A[index][1]) {
-        index = j;
+  sortProcessesByArrivalTime() {
+    this.processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+  }
+
+  sortProcessesByBurstTime() {
+    this.processes.sort((a, b) => a.burstTime - b.burstTime);
+  }
+
+  calculateWaitingTimes() {
+    let total = 0;
+    let currentTime = 0;
+    for (let i = 0; i < this.processes.length; i++) {
+      if (this.processes[i].arrivalTime > currentTime) {
+        currentTime = this.processes[i].arrivalTime;
       }
+      this.processes[i].waitingTime =
+        currentTime - this.processes[i].arrivalTime;
+      currentTime += this.processes[i].burstTime;
+      total += this.processes[i].waitingTime;
     }
-    temp = A[i][1];
-    A[i][1] = A[index][1];
-    A[index][1] = temp;
-
-    temp = A[i][0];
-    A[i][0] = A[index][0];
-    A[index][0] = temp;
+    const avgWt = total / this.processes.length;
+    return avgWt;
   }
 
-  A[0][2] = 0;
-  for (let i = 1; i < n; i++) {
-    A[i][2] = 0;
-    for (let j = 0; j < i; j++) {
-      A[i][2] += A[j][1];
+  calculateTurnaroundTimes() {
+    let total = 0;
+    for (let i = 0; i < this.processes.length; i++) {
+      this.processes[i].turnaroundTime =
+        this.processes[i].burstTime + this.processes[i].waitingTime;
+      total += this.processes[i].turnaroundTime;
     }
-    total += A[i][2];
+    const avgTat = total / this.processes.length;
+    return avgTat;
   }
 
-  avg_wt = total / n;
-  total = 0;
-  let output = [];
-  let ganttChart = [];
-  output.push([
-    ` ${GREEN}${BOLD}Processes`,
-    ` Burst time`,
-    ` Waiting time`,
-    ` Turnaround time${RESET}`,
-  ]);
+  schedule() {
+    this.sortProcessesByArrivalTime();
+    this.sortProcessesByBurstTime();
+    const avgWt = this.calculateWaitingTimes();
+    const avgTat = this.calculateTurnaroundTimes();
 
-  for (let i = 0; i < n; i++) {
-    A[i][3] = A[i][1] + A[i][2];
-    total += A[i][3];
-    output.push([`P${A[i][0]}`, A[i][1], A[i][2], A[i][3]]);
+    const wt = this.processes.map((process) => process.waitingTime);
+    const tat = this.processes.map((process) => process.turnaroundTime);
+    const stime = this.processes.map(
+      (process) => process.arrivalTime + process.waitingTime
+    );
+    const ctime = this.processes.map(
+      (process, index) => process.arrivalTime + tat[index]
+    );
 
-    // Add process to the Gantt Chart
-    let processGantt = Array(A[i][1]).fill(`P${A[i][0]}`);
-    ganttChart.push(processGantt);
+    return {
+      wt,
+      tat,
+      stime,
+      ctime,
+      avgWt,
+      avgTat,
+    };
   }
-
-  avg_tat = total / n;
-  output.push(["Average Waiting Time =", avg_wt]);
-  output.push(["Average Turnaround Time =", avg_tat]);
-
-  // Print the Gantt Chart
-  pColor("Gantt Chart:", BRIGHT_BLUE);
-  let chart = "";
-  for (let i = 0; i < ganttChart.length; i++) {
-    chart += "| ";
-    chart += ganttChart[i].join(" | ");
-    chart += " | ";
-  }
-  console.log(chart);
-
-  return output;
 }
+
+// Example usage
+const arrivalTimes = [0, 2, 4, 6, 8];
+const burstTimes = [3, 5, 1, 7, 4];
+
+const scheduler = new SJFScheduler(arrivalTimes, burstTimes);
+const output = scheduler.schedule();
+console.log(output);

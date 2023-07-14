@@ -1,67 +1,92 @@
-import { BRIGHT_BLUE, GREEN, pColor } from "./ConsoleUtils.js";
+class PriorityScheduler_nonpram {
+  constructor(arrivalTime, burstTime, priority) {
+    this.processes = [];
+    for (let i = 0; i < arrivalTime.length; i++) {
+      this.processes[i] = {
+        at: arrivalTime[i],
+        bt: burstTime[i],
+        pr: priority[i],
+        pno: i + 1,
+      };
+    }
+  }
 
-function getWaitingTime(proc, wt) {
-  wt[0] = 0;
+  compareProcesses(a, b) {
+    if (a.at === b.at) {
+      return a.pr < b.pr;
+    } else {
+      return a.at < b.at;
+    }
+  }
 
-  for (let i = 1; i < proc.length; i++) {
-    let serviceTime = proc[i - 1][1] + wt[i - 1];
-    wt[i] = Math.max(0, serviceTime - proc[i][0]);
+  getWaitingTime() {
+    const service = [];
+    const wt = new Array(this.processes.length);
+
+    service[0] = this.processes[0].at;
+    wt[0] = 0;
+
+    for (let i = 1; i < this.processes.length; i++) {
+      service[i] = this.processes[i - 1].bt + service[i - 1];
+      wt[i] = service[i] - this.processes[i].at;
+
+      if (wt[i] < 0) {
+        wt[i] = 0;
+      }
+    }
+
+    return wt;
+  }
+
+  getTurnaroundTime(wt) {
+    const tat = new Array(this.processes.length);
+
+    for (let i = 0; i < this.processes.length; i++) {
+      tat[i] = this.processes[i].bt + wt[i];
+    }
+
+    return tat;
+  }
+
+  findGanttChart() {
+    const wt = this.getWaitingTime();
+    const tat = this.getTurnaroundTime(wt);
+    const stime = [];
+    const ctime = [];
+
+    stime[0] = this.processes[0].at;
+    ctime[0] = stime[0] + tat[0];
+
+    for (let i = 1; i < this.processes.length; i++) {
+      stime[i] = ctime[i - 1];
+      ctime[i] = stime[i] + tat[i] - wt[i];
+    }
+
+    const wavg =
+      wt.reduce((sum, time) => sum + time, 0) / this.processes.length;
+    const tavg =
+      tat.reduce((sum, time) => sum + time, 0) / this.processes.length;
+
+    return {
+      wt,
+      tat,
+      stime,
+      ctime,
+      avgWt: wavg,
+      avgTat: tavg,
+    };
   }
 }
 
-function getTurnaroundTime(proc, wt, tat) {
-  for (let i = 0; i < proc.length; i++) {
-    tat[i] = proc[i][1] + wt[i];
-  }
-}
+// Example usage
+const arrivalTime = [1, 2, 3, 4, 5];
+const burstTime = [3, 5, 1, 7, 4];
+const priority = [3, 4, 1, 7, 8];
 
-export default function simulatePriority_non_pre(proc) {
-  const wt = new Array(proc.length).fill(0);
-  const tat = new Array(proc.length).fill(0);
-  let wavg = 0;
-  let tavg = 0;
-
-  getWaitingTime(proc, wt);
-  getTurnaroundTime(proc, wt, tat);
-
-  pColor(
-    "Process_no\tStart_time\tComplete_time\tTurn_Around_Time\tWaiting_Time",
-    GREEN
-  );
-
-  for (let i = 0; i < proc.length; i++) {
-    wavg += wt[i];
-    tavg += tat[i];
-
-    console.log(
-      proc[i][3] +
-        "\t\t" +
-        proc[i][0] +
-        "\t\t" +
-        (tat[i] + proc[i][0]) +
-        "\t\t" +
-        tat[i] +
-        "\t\t\t" +
-        wt[i]
-    );
-  }
-
-  console.log("Average waiting time is: " + wavg / proc.length);
-  console.log("Average turnaround time: " + tavg / proc.length);
-
-  let ganttChart = generateGanttChart(proc);
-  pColor("Gantt Chart:\n", BRIGHT_BLUE);
-  console.log(ganttChart);
-}
-
-function generateGanttChart(proc) {
-  let ganttChart = "";
-  let currentTime = 0;
-
-  for (let i = 0; i < proc.length; i++) {
-    ganttChart += "P" + proc[i][3] + " ";
-    currentTime += proc[i][1];
-  }
-
-  return ganttChart;
-}
+const scheduler = new PriorityScheduler_nonpram(
+  arrivalTime,
+  burstTime,
+  priority
+);
+const output = scheduler.findGanttChart();
+console.log(output);

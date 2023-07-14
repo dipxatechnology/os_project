@@ -1,117 +1,110 @@
-import { BRIGHT_BLUE, GREEN, pColor } from "./ConsoleUtils.js";
-
-export class Process_non_pre {
-  constructor(pid, bt, art) {
-    this.pid = pid; // Process ID
-    this.bt = bt; // Burst Time
-    this.art = art; // Arrival Time
-  }
-}
-
-function findWaitingTime(proc, n, wt) {
-  let rt = new Array(n);
-
-  // Copy the burst time into rt[]
-  for (let i = 0; i < n; i++) {
-    rt[i] = proc[i].bt;
+class SJFScheduler {
+  constructor(processes) {
+    this.processes = processes;
   }
 
-  let complete = 0,
-    t = 0,
-    minm = Number.MAX_VALUE;
-  let shortest = 0,
-    finish_time;
-  let check = false;
+  // Function to perform non-preemptive Shortest Job First scheduling
+  nonPreemptiveSJF() {
+    const n = this.processes.length;
 
-  // Process until all processes get completed
-  while (complete != n) {
-    // Find the process with the minimum remaining time among the processes that arrive till the current time
-    for (let j = 0; j < n; j++) {
-      if (proc[j].art <= t && rt[j] < minm && rt[j] > 0) {
-        minm = rt[j];
-        shortest = j;
-        check = true;
+    // Sorting the processes based on arrival time
+    this.processes.sort((a, b) => a.at - b.at);
+
+    let counter = n;
+    let upperRange = 0;
+    let tm = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      this.processes[upperRange + 1].at
+    );
+
+    while (counter) {
+      for (; upperRange <= n; ) {
+        upperRange++;
+        if (this.processes[upperRange].at > tm || upperRange > n) {
+          upperRange--;
+          break;
+        }
+      }
+
+      let minBurstTime = Number.MAX_SAFE_INTEGER;
+      let minIndex = -1;
+
+      for (let i = 1; i <= upperRange; i++) {
+        if (this.processes[i].bt < minBurstTime && this.processes[i].bt > 0) {
+          minBurstTime = this.processes[i].bt;
+          minIndex = i;
+        }
+      }
+
+      if (minIndex !== -1) {
+        counter--;
+        const index = minIndex;
+        tm += this.processes[index].bt;
+
+        this.processes[index].ct = tm;
+        this.processes[index].tat =
+          this.processes[index].ct - this.processes[index].at;
+        this.processes[index].wt =
+          this.processes[index].tat - this.processes[index].bt;
+
+        this.processes[index].bt = Number.MAX_SAFE_INTEGER;
+      } else {
+        tm = this.processes[upperRange + 1].at;
       }
     }
+  }
 
-    if (check == false) {
-      t++;
-      continue;
+  // Function to calculate average waiting time
+  calculateAverageWaitingTime() {
+    let totalWt = 0;
+    for (let i = 0; i < this.processes.length; i++) {
+      totalWt += this.processes[i].wt;
     }
+    const avgWt = totalWt / this.processes.length;
+    return avgWt;
+  }
 
-    // Reduce the remaining time by one
-    rt[shortest]--;
-
-    // Update the minimum
-    minm = rt[shortest];
-    if (minm == 0) {
-      minm = Number.MAX_VALUE;
+  // Function to calculate average turnaround time
+  calculateAverageTurnaroundTime() {
+    let totalTat = 0;
+    for (let i = 0; i < this.processes.length; i++) {
+      totalTat += this.processes[i].tat;
     }
+    const avgTat = totalTat / this.processes.length;
+    return avgTat;
+  }
 
-    // If a process gets completely executed
-    if (rt[shortest] == 0) {
-      // Increment complete
-      complete++;
-      check = false;
+  // Function to schedule and calculate the output
+  schedule() {
+    this.nonPreemptiveSJF();
+    const avgWt = this.calculateAverageWaitingTime();
+    const avgTat = this.calculateAverageTurnaroundTime();
 
-      // Find the finish time of the current process
-      finish_time = t + 1;
+    const wt = this.processes.map((process) => process.wt);
+    const tat = this.processes.map((process) => process.tat);
+    const stime = this.processes.map((process) => process.at + process.wt);
+    const ctime = this.processes.map((process) => process.ct);
 
-      // Calculate the waiting time
-      wt[shortest] = finish_time - proc[shortest].bt - proc[shortest].art;
-
-      if (wt[shortest] < 0) {
-        wt[shortest] = 0;
-      }
-    }
-    // Increment time
-    t++;
+    return {
+      wt,
+      tat,
+      stime,
+      ctime,
+      avgWt,
+      avgTat,
+    };
   }
 }
 
-function findTurnAroundTime(proc, n, wt, tat) {
-  // Calculating turnaround time by adding bt[i] + wt[i]
-  for (let i = 0; i < n; i++) {
-    tat[i] = proc[i].bt + wt[i];
-  }
-}
+// Example usage
+const processes = [
+  { id: 1, at: 1, bt: 7 },
+  { id: 2, at: 2, bt: 5 },
+  { id: 3, at: 3, bt: 1 },
+  { id: 4, at: 4, bt: 2 },
+  { id: 5, at: 5, bt: 8 },
+];
 
-export function findavgTime(proc, n) {
-  let wt = new Array(n),
-    tat = new Array(n);
-  let total_wt = 0,
-    total_tat = 0;
-
-  // Function to find the waiting time of all processes
-  findWaitingTime(proc, n, wt);
-
-  // Function to find the turn around time for all processes
-  findTurnAroundTime(proc, n, wt, tat);
-
-  // Display processes along with all details
-  pColor("Processes\tBurst time\tWaiting time\tTurnaround time", GREEN);
-  for (let i = 0; i < n; i++) {
-    console.log(`${proc[i].pid}\t\t${proc[i].bt}\t\t${wt[i]}\t\t${tat[i]}`);
-    total_wt += wt[i];
-    total_tat += tat[i];
-  }
-
-  // Calculate average waiting time and average turnaround time
-  const avg_wt = total_wt / n;
-  const avg_tat = total_tat / n;
-
-  console.log(`Average waiting time = ${avg_wt}`);
-  console.log(`Average turnaround time = ${avg_tat}`);
-  // Display Gantt Chart
-  pColor("\nGantt Chart:", BRIGHT_BLUE);
-  let chart = "";
-  let currentTime = proc[0].art;
-  for (let i = 0; i < n; i++) {
-    chart += `P${proc[i].pid} `;
-    currentTime += proc[i].bt;
-    if (i < n - 1) {
-      chart += `| ${currentTime} `;
-    }
-  }
-  console.log(chart);
-}
+const scheduler = new SJFScheduler(processes);
+const output = scheduler.schedule();
+console.log(output);

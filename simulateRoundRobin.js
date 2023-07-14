@@ -1,90 +1,124 @@
-import { BRIGHT_BLUE, GREEN, pColor } from "./ConsoleUtils.js";
+class RoundRobinScheduler {
+  constructor(quantum) {
+    this.quantum = quantum;
+  }
 
-function findWaitingTime(processes, n, burstTime, waitingTime, quantum) {
-  let remainingTime = burstTime.slice();
-  let currentTime = 0;
-  let completed = false;
+  roundOff(num) {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  }
 
-  while (!completed) {
-    completed = true;
+  schedule(processes) {
+    const n = processes.length;
+    const s = new Array(n).fill().map(() => new Array(20).fill(-1));
+    const b = new Array(n);
+    const a = new Array(n);
+    const p = new Array(n);
+
+    let c = n;
+    let time = 0;
+    let mini = Infinity;
+    let index = -1;
+    let tot_wt = 0;
+    let tot_tat = 0;
+    let flag = false;
 
     for (let i = 0; i < n; i++) {
-      if (remainingTime[i] > 0) {
-        if (remainingTime[i] > quantum) {
-          currentTime += quantum;
-          remainingTime[i] -= quantum;
-        } else {
-          currentTime += remainingTime[i];
-          waitingTime[i] = currentTime - burstTime[i];
-          remainingTime[i] = 0;
-        }
+      b[i] = processes[i].BT;
+      a[i] = processes[i].AT;
+      p[i] = {
+        ...processes[i],
+        ST: new Array(20).fill(0),
+        FT: 0,
+        TAT: 0,
+        WT: 0,
+      };
+    }
 
-        completed = false;
+    while (c !== 0) {
+      mini = Infinity;
+      flag = false;
+
+      for (let i = 0; i < n; i++) {
+        const pTime = time + 0.1;
+        if (a[i] <= pTime && mini > a[i] && b[i] > 0) {
+          index = i;
+          mini = a[i];
+          flag = true;
+        }
+      }
+
+      if (!flag) {
+        time++;
+        continue;
+      }
+
+      let j = 0;
+      while (s[index][j] !== -1) {
+        j++;
+      }
+
+      if (s[index][j] === -1) {
+        s[index][j] = time;
+        p[index].ST[j] = time;
+      }
+
+      if (b[index] <= this.quantum) {
+        time += b[index];
+        b[index] = 0;
+      } else {
+        time += this.quantum;
+        b[index] -= this.quantum;
+      }
+
+      if (b[index] > 0) {
+        a[index] = time + 0.1;
+      }
+
+      if (b[index] === 0) {
+        c--;
+        p[index].FT = time;
+        p[index].WT = p[index].FT - p[index].AT - p[index].BT;
+        tot_wt += p[index].WT;
+        p[index].TAT = p[index].BT + p[index].WT;
+        tot_tat += p[index].TAT;
       }
     }
-  }
-}
 
-function findTurnaroundTime(
-  processes,
-  n,
-  burstTime,
-  waitingTime,
-  turnaroundTime
-) {
-  for (let i = 0; i < n; i++) {
-    turnaroundTime[i] = burstTime[i] + waitingTime[i];
-  }
-}
-
-export function simulateRoundRobin(processes, n, burstTime, quantum) {
-  let waitingTime = new Array(n).fill(0);
-  let turnaroundTime = new Array(n).fill(0);
-  let totalWaitingTime = 0;
-  let totalTurnaroundTime = 0;
-
-  findWaitingTime(processes, n, burstTime, waitingTime, quantum);
-  findTurnaroundTime(processes, n, burstTime, waitingTime, turnaroundTime);
-
-  pColor("Processes  Burst Time  Waiting Time  Turnaround Time", GREEN);
-  for (let i = 0; i < n; i++) {
-    totalWaitingTime += waitingTime[i];
-    totalTurnaroundTime += turnaroundTime[i];
-    console.log(
-      `${processes[i]}          ${burstTime[i]}             ${waitingTime[i]}            ${turnaroundTime[i]}`
-    );
-  }
-
-  console.log(`Average waiting time: ${totalWaitingTime / n}`);
-  console.log(`Average turnaround time: ${totalTurnaroundTime / n}`);
-
-  // Generate Gantt Chart
-  let ganttChart = "";
-  let currentTime = 0;
-  let remainingTime = burstTime.slice();
-  let completed = false;
-
-  while (!completed) {
-    completed = true;
+    const result = {
+      processes: [],
+      avg_wt: 0,
+      avg_tat: 0,
+    };
 
     for (let i = 0; i < n; i++) {
-      if (remainingTime[i] > 0) {
-        if (remainingTime[i] > quantum) {
-          ganttChart += `P${processes[i]} `;
-          currentTime += quantum;
-          remainingTime[i] -= quantum;
-        } else {
-          let executionTime = remainingTime[i];
-          for (let j = 0; j < executionTime; j++) {
-            ganttChart += `P${processes[i]} `;
-          }
-          currentTime += remainingTime[i];
-          remainingTime[i] = 0;
-        }
-        completed = false;
-      }
+      result.processes.push({
+        pos: p[i].pos,
+        AT: p[i].AT,
+        BT: p[i].BT,
+        ST: p[i].ST.slice(0, p[i].ST.indexOf(-1)),
+        FT: p[i].FT,
+        WT: p[i].WT,
+        TAT: p[i].TAT,
+      });
     }
+
+    result.avg_wt = this.roundOff(tot_wt / n);
+    result.avg_tat = this.roundOff(tot_tat / n);
+
+    return result;
   }
-  pColor("Gantt Chart: ", BRIGHT_BLUE);
-  console.log(`${ganttChart}`);
 }
+
+// Example usage
+const processes = [
+  { pos: 1, AT: 0, BT: 4 },
+  { pos: 2, AT: 1, BT: 5 },
+  { pos: 3, AT: 2, BT: 6 },
+  { pos: 4, AT: 3, BT: 7 },
+  { pos: 5, AT: 4, BT: 8 },
+];
+const quantum = 2;
+
+const scheduler = new RoundRobinScheduler(quantum);
+const result = scheduler.schedule(processes);
+console.log(result);
