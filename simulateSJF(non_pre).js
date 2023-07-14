@@ -3,25 +3,21 @@ class SJFScheduler {
     this.processes = processes;
   }
 
-  // Function to perform non-preemptive Shortest Job First scheduling
   nonPreemptiveSJF() {
     const n = this.processes.length;
 
-    // Sorting the processes based on arrival time
     this.processes.sort((a, b) => a.at - b.at);
 
     let counter = n;
     let upperRange = 0;
     let tm = Math.min(
       Number.MAX_SAFE_INTEGER,
-      this.processes[upperRange + 1].at
+      this.processes[upperRange + 1]?.at
     );
 
-    while (counter) {
-      for (; upperRange <= n; ) {
-        upperRange++;
-        if (this.processes[upperRange].at > tm || upperRange > n) {
-          upperRange--;
+    while (counter > 0) {
+      for (; upperRange < n - 1; upperRange++) {
+        if (this.processes[upperRange + 1].at > tm) {
           break;
         }
       }
@@ -29,7 +25,7 @@ class SJFScheduler {
       let minBurstTime = Number.MAX_SAFE_INTEGER;
       let minIndex = -1;
 
-      for (let i = 1; i <= upperRange; i++) {
+      for (let i = 0; i <= upperRange; i++) {
         if (this.processes[i].bt < minBurstTime && this.processes[i].bt > 0) {
           minBurstTime = this.processes[i].bt;
           minIndex = i;
@@ -49,12 +45,11 @@ class SJFScheduler {
 
         this.processes[index].bt = Number.MAX_SAFE_INTEGER;
       } else {
-        tm = this.processes[upperRange + 1].at;
+        tm = this.processes[upperRange + 1]?.at || 0;
       }
     }
   }
 
-  // Function to calculate average waiting time
   calculateAverageWaitingTime() {
     let totalWt = 0;
     for (let i = 0; i < this.processes.length; i++) {
@@ -64,7 +59,6 @@ class SJFScheduler {
     return avgWt;
   }
 
-  // Function to calculate average turnaround time
   calculateAverageTurnaroundTime() {
     let totalTat = 0;
     for (let i = 0; i < this.processes.length; i++) {
@@ -74,7 +68,6 @@ class SJFScheduler {
     return avgTat;
   }
 
-  // Function to schedule and calculate the output
   schedule() {
     this.nonPreemptiveSJF();
     const avgWt = this.calculateAverageWaitingTime();
@@ -96,7 +89,6 @@ class SJFScheduler {
   }
 }
 
-// Example usage
 const processes = [
   { id: 1, at: 1, bt: 7 },
   { id: 2, at: 2, bt: 5 },
