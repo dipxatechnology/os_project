@@ -1,109 +1,101 @@
-import readlineSync from "readline-sync";
+import runPreemptivePrioritySimulation from "./simulatePriority.js";
 import simulateRoundRobin from "./simulateRoundRobin.js";
-import simulateSJF from "./simulateSJF.js";
-import simulatePriority from "./simulatePriority.js";
 import simulateFCFS from "./simulateFCFS.js";
-import displayGanttChart from "./displayGanttChart.js";
+import calculateSJF from "./simulateSJF.js";
 
-// Structure to represent a process
-class Process {
-  constructor(processId, arrivalTime, burstTime, priority) {
-    this.processId = processId;
-    this.arrivalTime = arrivalTime;
-    this.burstTime = burstTime;
-    this.priority = priority;
-    this.remainingTime = burstTime;
-  }
-}
-
-// Function to display process details and CPU processing options
-function displayOptions() {
-  console.log("Choose a CPU Processing Type:");
-  console.log("1. Round Robin (Quantum = 3) Preemptive");
-  console.log("2. Non-preemptive Shortest Job First (SJF)");
-  console.log("3. Preemptive Priority");
-  console.log("4. Non-preemptive Priority");
-  console.log("5. First-Come, First-Served (FCFS)");
-
-  const option = parseInt(readlineSync.question("Enter your option: "));
-  console.log();
-
-  return option;
-}
+import { Process_non_pre, findavgTime } from "./simulateSJF(non_pre).js";
+import simulatePriority_non_pre from "./simulatePriority(non-pre).js";
+import { BOLD, line, pColor } from "./ConsoleUtils.js";
 
 // Main program
 function main() {
-  const option = displayOptions();
-  const numProcesses = parseInt(
-    readlineSync.question("Enter the number of processes: ")
-  );
-  console.log();
-
-  if (numProcesses < 3 || numProcesses > 10) {
-    console.log("Invalid number of processes. Exiting...");
-    return;
-  }
-
-  const processes = [];
-  console.log("Enter the details for each process:");
-  for (let i = 0; i < numProcesses; i++) {
-    console.log("Process " + i + ":");
-    const burstTime = parseInt(readlineSync.question("Burst Time: "));
-    const arrivalTime = parseInt(readlineSync.question("Arrival Time: "));
-    const priority = parseInt(readlineSync.question("Priority: "));
-    processes.push(new Process(i, arrivalTime, burstTime, priority));
-    console.log();
-  }
-
-  let schedulingResult;
-  switch (option) {
-    case 1:
-      // eslint-disable-next-line no-case-declarations
-      const timeQuantum = 3;
-      console.log("Round Robin with Quantum " + timeQuantum);
-      schedulingResult = simulateRoundRobin(processes, timeQuantum);
-      break;
-    case 2:
-      console.log("Non-preemptive Shortest Job First (SJF)");
-      schedulingResult = simulateSJF(processes, false);
-      break;
-    case 3:
-      console.log("Preemptive Priority");
-      schedulingResult = simulatePriority(processes, true);
-      break;
-    case 4:
-      console.log("Non-preemptive Priority");
-      schedulingResult = simulatePriority(processes, false);
-      break;
-    case 5:
-      console.log("First-Come, First-Served (FCFS)");
-      schedulingResult = simulateFCFS(processes);
-      break;
-    default:
-      console.log("Invalid option. Exiting...");
-      return;
-  }
-
-  // Display process details
-  console.log("| Process | Burst Time | Arrival Time | Priority |");
-  for (let i = 0; i < processes.length; i++) {
-    const process = processes[i];
-    console.log(
-      `   P${process.processId}        ${process.burstTime}             ${process.arrivalTime}             ${process.priority}`
-    );
-  }
-  console.log();
-
-  // Display the Gantt chart
-  displayGanttChart(schedulingResult.ganttChart);
-  console.log();
-
-  // Display waiting time for each process
-  console.log("Waiting Time for each process:");
-  for (let i = 0; i < processes.length; i++) {
-    console.log(`P${i}: ${schedulingResult.waitingTime[i]}`);
-  }
+  line();
+  pColor("Non-preemptive Priority", BOLD);
+  runPriority_non_pre();
+  line();
+  pColor("Preemptive Priority", BOLD);
+  runPreemptivePriority();
+  line();
+  pColor("Round Robin (Quantum = 3) Preemptive", BOLD);
+  runRoundRobin();
+  line();
+  pColor("First-Come, First-Served (FCFS)", BOLD);
+  runFCFS();
+  line();
+  pColor("Shortest Job First (SJF)", BOLD);
+  runSFJ();
+  line();
+  pColor("Non-preemptive Shortest Job First (SJF)", BOLD);
+  runSFJ_non_pre();
 }
 
-// Run the program
 main();
+
+function runPriority_non_pre() {
+  const totalprocess = 5;
+  const proc = [];
+
+  const arrivaltime = [1, 2, 3, 4, 5];
+  const bursttime = [3, 5, 1, 7, 4];
+  const priority = [3, 4, 1, 7, 8];
+
+  for (let i = 0; i < totalprocess; i++) {
+    proc.push([arrivaltime[i], bursttime[i], priority[i], i + 1]);
+  }
+
+  proc.sort((a, b) => {
+    if (a[2] === b[2]) {
+      return a[0] - b[0];
+    } else {
+      return a[2] - b[2];
+    }
+  });
+
+  simulatePriority_non_pre(proc);
+}
+
+function runRoundRobin() {
+  const processes = [1, 2, 3];
+  const n = processes.length;
+  const burstTime = [10, 5, 8];
+  const timeQuantum = 2;
+
+  simulateRoundRobin(processes, n, burstTime, timeQuantum);
+}
+
+function runFCFS() {
+  let processes = [1, 2, 3];
+  let burst_time = [10, 5, 8];
+  let n = processes.length;
+
+  simulateFCFS(processes, n, burst_time);
+}
+
+function runSFJ() {
+  let n = 5;
+  let A = [];
+  let total = 0;
+  const burstTimes = [3, 5, 1, 7, 4];
+  calculateSJF(n, A, total, burstTimes);
+}
+function runPreemptivePriority() {
+  const processes = [
+    { pid: 1, bt: 5, priority: 2 },
+    { pid: 2, bt: 3, priority: 1 },
+    { pid: 3, bt: 8, priority: 4 },
+    { pid: 4, bt: 2, priority: 3 },
+  ];
+
+  runPreemptivePrioritySimulation(processes);
+}
+
+function runSFJ_non_pre() {
+  const proc = [
+    new Process_non_pre(1, 6, 1),
+    new Process_non_pre(2, 8, 1),
+    new Process_non_pre(3, 7, 2),
+    new Process_non_pre(4, 3, 3),
+  ];
+
+  findavgTime(proc, proc.length);
+}

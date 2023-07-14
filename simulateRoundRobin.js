@@ -1,48 +1,89 @@
-import calculateWaitingTime from "./calculateWaitingTime.js";
+import { BRIGHT_BLUE, GREEN, pColor } from "./ConsoleUtils.js";
 
-export default function simulateRoundRobin(processes, timeQuantum) {
-  const readyQueue = [];
-  const ganttChart = [];
-  const completionTime = new Array(processes.length).fill(0);
+function findWaitingTime(processes, n, burstTime, waitingTime, quantum) {
+  let remainingTime = burstTime.slice();
   let currentTime = 0;
-  let remainingProcesses = processes.length;
+  let completed = false;
 
-  while (remainingProcesses > 0) {
-    for (let i = 0; i < processes.length; i++) {
-      if (
-        processes[i].arrivalTime <= currentTime &&
-        processes[i].remainingTime > 0
-      ) {
-        readyQueue.push(processes[i]);
+  while (!completed) {
+    completed = true;
+
+    for (let i = 0; i < n; i++) {
+      if (remainingTime[i] > 0) {
+        if (remainingTime[i] > quantum) {
+          currentTime += quantum;
+          remainingTime[i] -= quantum;
+        } else {
+          currentTime += remainingTime[i];
+          waitingTime[i] = currentTime - burstTime[i];
+          remainingTime[i] = 0;
+        }
+
+        completed = false;
       }
     }
+  }
+}
 
-    if (readyQueue.length === 0) {
-      currentTime++;
-      continue;
-    }
+function findTurnaroundTime(
+  processes,
+  n,
+  burstTime,
+  waitingTime,
+  turnaroundTime
+) {
+  for (let i = 0; i < n; i++) {
+    turnaroundTime[i] = burstTime[i] + waitingTime[i];
+  }
+}
+export default function simulateRoundRobin(processes, n, burstTime, quantum) {
+  let waitingTime = new Array(n).fill(0);
+  let turnaroundTime = new Array(n).fill(0);
+  let totalWaitingTime = 0;
+  let totalTurnaroundTime = 0;
 
-    const currentProcess = readyQueue.shift();
-    const executionTime = Math.min(timeQuantum, currentProcess.remainingTime);
+  findWaitingTime(processes, n, burstTime, waitingTime, quantum);
+  findTurnaroundTime(processes, n, burstTime, waitingTime, turnaroundTime);
 
-    for (let t = 0; t < executionTime; t++) {
-      ganttChart.push(currentProcess.processId);
-      currentTime++;
-      currentProcess.remainingTime--;
-    }
-
-    if (currentProcess.remainingTime > 0) {
-      readyQueue.push(currentProcess);
-    } else {
-      completionTime[currentProcess.processId] = currentTime;
-      remainingProcesses--;
-    }
+  pColor("Processes\tBurst Time\tWaiting Time\tTurnaround\tTime", GREEN);
+  for (let i = 0; i < n; i++) {
+    totalWaitingTime += waitingTime[i];
+    totalTurnaroundTime += turnaroundTime[i];
+    console.log(
+      `${processes[i]}\t${burstTime[i]}\t${waitingTime[i]}\t${turnaroundTime[i]}`
+    );
   }
 
-  const waitingTime = calculateWaitingTime(processes, completionTime);
+  console.log(`Average waiting time: ${totalWaitingTime / n}`);
+  console.log(`Average turnaround time: ${totalTurnaroundTime / n}`);
 
-  return {
-    ganttChart,
-    waitingTime,
-  };
+  // Generate Gantt Chart
+  let ganttChart = "";
+  let currentTime = 0;
+  let remainingTime = burstTime.slice();
+  let completed = false;
+
+  while (!completed) {
+    completed = true;
+
+    for (let i = 0; i < n; i++) {
+      if (remainingTime[i] > 0) {
+        if (remainingTime[i] > quantum) {
+          ganttChart += `P${processes[i]} `;
+          currentTime += quantum;
+          remainingTime[i] -= quantum;
+        } else {
+          let executionTime = remainingTime[i];
+          for (let j = 0; j < executionTime; j++) {
+            ganttChart += `P${processes[i]} `;
+          }
+          currentTime += remainingTime[i];
+          remainingTime[i] = 0;
+        }
+        completed = false;
+      }
+    }
+  }
+  pColor("Gantt Chart:", BRIGHT_BLUE);
+  console.log(ganttChart);
 }
